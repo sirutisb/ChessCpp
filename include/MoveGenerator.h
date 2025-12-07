@@ -13,6 +13,17 @@ public:
         }
     }
 
+    static void generateAllSide(const Board& board, PieceColor side, std::vector<Move>& out) {
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                Position pos(r, c);
+                const Piece* p = board.getPiece(pos);
+                if (p && p->color() != side) continue;
+                generateFrom(board, pos, out);
+            }
+        }
+    }
+
     static void generateFrom(const Board& board, const Position& from, std::vector<Move>& out) {
         const Piece* p = board.getPiece(from);
         if (!p) return;
@@ -251,5 +262,61 @@ private:
                 out.push_back(m);
             }
         }
+
+        // Castling logic
+        // [0]=white kingside, [1]=white queenside, [2]=black kingside, [3]=black queenside
+        PieceColor color = me->color();
+        PieceColor opp = (color == PieceColor::White) ? PieceColor::Black : PieceColor::White;
+        int row = (color == PieceColor::White) ? 7 : 0;
+        int king_col = 4;
+        const bool* castling_rights = board.getCastlingRights();
+        // Kingside
+        int kingside_idx = (color == PieceColor::White) ? 0 : 2;
+        if (from.row == row && from.col == king_col && castling_rights[kingside_idx]) {
+            // Squares between king and rook must be empty
+            if (!board.getPiece({row, 5}) && !board.getPiece({row, 6})) {
+                // King not in check, and does not pass through or land in check
+                if (!isSquareAttacked(board, {row, 4}, opp) &&
+                    !isSquareAttacked(board, {row, 5}, opp) &&
+                    !isSquareAttacked(board, {row, 6}, opp)) {
+                    Move m;
+                    m.from = from;
+                    m.to = {row, 6};
+                    m.isCapture = false;
+                    m.isCastling = true;
+                    m.isEnpassant = false;
+                    m.Promotion = Promotion::None;
+                    out.push_back(m);
+                }
+            }
+        }
+        // Queenside
+        int queenside_idx = (color == PieceColor::White) ? 1 : 3;
+        if (from.row == row && from.col == king_col && castling_rights[queenside_idx]) {
+            if (!board.getPiece({row, 1}) && !board.getPiece({row, 2}) && !board.getPiece({row, 3})) {
+                if (!isSquareAttacked(board, {row, 4}, opp) &&
+                    !isSquareAttacked(board, {row, 3}, opp) &&
+                    !isSquareAttacked(board, {row, 2}, opp)) {
+                    Move m;
+                    m.from = from;
+                    m.to = {row, 2};
+                    m.isCapture = false;
+                    m.isCastling = true;
+                    m.isEnpassant = false;
+                    m.Promotion = Promotion::None;
+                    out.push_back(m);
+                }
+            }
+        }
+    }
+
+    // Returns true if the given square is attacked by the given color
+    static bool isSquareAttacked(const Board& board, const Position& sq, PieceColor byColor) {
+        std::vector<Move> theirMoves;
+    MoveGenerator::generateAllSide(board, byColor, theirMoves);
+        for (const auto& m : theirMoves) {
+            if (m.to == sq) return true;
+        }
+        return false;
     }
 };

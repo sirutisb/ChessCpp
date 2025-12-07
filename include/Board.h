@@ -12,9 +12,9 @@ struct Move {
     Position from;
     Position to;
     Promotion Promotion = Promotion::None;
-    bool isCapture : 1 = 0;
-    bool isEnpassant : 1 = 0;
-    bool isCastling : 1 = 0;
+    bool isCapture : 1;
+    bool isEnpassant : 1;
+    bool isCastling : 1;
 };
 
 class Board {
@@ -51,6 +51,8 @@ public:
     void switchTurn() { turn_ = turn_ == PieceColor::White ? PieceColor::Black : PieceColor::White; }
 
     Position enPassantTarget() const { return en_passant_target_; }
+
+    const bool* getCastlingRights() const { return castling_rights_; }
 
     // Return an ASCII representation of the board: ranks 8->1, files a->h
     // Example:
@@ -116,6 +118,19 @@ public:
             if (inBounds(capturedPos)) board_[capturedPos.row][capturedPos.col].reset();
         }
 
+        // castling handle
+        if (move.isCastling && movingPiece.type() == PieceType::King) {
+            int row = move.from.row;
+            if (move.to.col == 6) { // kingside
+                board_[row][5] = std::move(board_[row][7]);
+                board_[row][7].reset();
+            } else if (move.to.col == 2) { // queenside
+                board_[row][3] = std::move(board_[row][0]);
+                board_[row][0].reset();
+            }
+        }
+
+
         // Move the piece
         board_[move.to.row][move.to.col] = std::move(board_[move.from.row][move.from.col]);
         board_[move.from.row][move.from.col].reset();
@@ -131,6 +146,40 @@ public:
             }
         }
 
+        // Update castling rights
+        if (movingPiece.type() == PieceType::King && movingPiece.color() == PieceColor::White) {
+            castling_rights_[0] = false;
+            castling_rights_[1] = false;
+        }
+        if (movingPiece.type() == PieceType::King && movingPiece.color() == PieceColor::Black) {
+            castling_rights_[2] = false;
+            castling_rights_[3] = false;
+        }
+        if (movingPiece.type() == PieceType::Rook && movingPiece.color() == PieceColor::White) {
+            if (move.from.row == 7 && move.from.col == 0) castling_rights_[1] = false; // queenside
+            if (move.from.row == 7 && move.from.col == 7) castling_rights_[0] = false; // kingside
+        }
+        if (movingPiece.type() == PieceType::Rook && movingPiece.color() == PieceColor::Black) {
+            if (move.from.row == 0 && move.from.col == 0) castling_rights_[3] = false; // queenside
+            if (move.from.row == 0 && move.from.col == 7) castling_rights_[2] = false; // kingside
+        }
+        if (move.isCapture) {
+            if (move.to.row == 7 && move.to.col == 0) castling_rights_[1] = false;
+            if (move.to.row == 7 && move.to.col == 7) castling_rights_[0] = false;
+            if (move.to.row == 0 && move.to.col == 0) castling_rights_[3] = false;
+            if (move.to.row == 0 && move.to.col == 7) castling_rights_[2] = false;
+        }
+
+        // promotion logic
+
+        if (move.Promotion != Promotion::None) {
+            auto& old = board_[move.to.row][move.to.col];
+            if (old) {
+                Piece promoted(PieceType::Queen, old.value().color());
+                old = promoted;
+            }
+        }
+
         // Switch side to move
         turn_ = (turn_ == PieceColor::White) ? PieceColor::Black : PieceColor::White;
     }
@@ -138,9 +187,7 @@ public:
     std::vector<Move> legalMoves() const;
     std::vector<Move> legalMovesFrom(const Position& p) const;
 
-    bool isKingInCheck(PieceColor color) const {
-        return false;
-    }
+    bool isKingInCheck(PieceColor color) const;
 
 private:
     PieceColor turn_;
@@ -149,7 +196,7 @@ private:
 
     // int halfmove_clock_ = 0;
     // Castling rights: [white kingside, white queenside, black kingside, black queenside]
-    // bool castling_rights_[4] = {true, true, true, true};
+    bool castling_rights_[4] = {true, true, true, true};
     // Track en passant target square (-1, -1 if none)
     // std::pair<int, int> en_passant_target_ = {-1, -1};
 
