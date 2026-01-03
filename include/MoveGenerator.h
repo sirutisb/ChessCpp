@@ -1,5 +1,5 @@
 #pragma once
-#include "Board.h"
+#include "board.h"
 #include <vector>
 
 class MoveGenerator {
@@ -51,7 +51,7 @@ private:
             if (one.row == promoteRow) {
                 for (Promotion pr : {Promotion::Queen, Promotion::Rook, Promotion::Knight, Promotion::Bishop }) {
                     Move m{from, one};
-                    m.Promotion = pr;
+                    m.promotion = pr;
                     m.isCapture = false;
                     m.isEnpassant = false;
                     m.isCastling = false;
@@ -59,7 +59,7 @@ private:
                 }
             } else {
                 Move m{from, one};
-                m.Promotion = Promotion::None;
+                m.promotion = Promotion::None;
                 m.isCapture = false;
                 m.isEnpassant = false;
                 m.isCastling = false;
@@ -68,7 +68,7 @@ private:
                 Position two{ from.row + 2*dir, from.col };
                 if (from.row == startRow && board.inBounds(two) && board.getPiece(two) == nullptr) {
                     Move m2{from, two};
-                    m2.Promotion = Promotion::None;
+                    m2.promotion = Promotion::None;
                     m2.isCapture = false;
                     m2.isEnpassant = false; // this is set when the move is applied
                     m2.isCastling = false;
@@ -76,7 +76,7 @@ private:
                 }
             }
         }
-        
+
         Position enPass = board.enPassantTarget();
         for (int dc : {-1, 1}) {
             Position cap{ from.row + dir, from.col + dc};
@@ -86,7 +86,7 @@ private:
                 if (cap.row == promoteRow) {
                     for (Promotion pr : { Promotion::Queen, Promotion::Rook, Promotion::Bishop, Promotion::Knight }) {
                         Move m{from, cap};
-                        m.Promotion = pr;
+                        m.promotion = pr;
                         m.isCapture = true;
                         m.isEnpassant = false;
                         m.isCastling = false;
@@ -94,7 +94,7 @@ private:
                     }
                 } else {
                     Move m{from, cap};
-                    m.Promotion = Promotion::None;
+                    m.promotion = Promotion::None;
                     m.isCapture = true;
                     m.isEnpassant = false;
                     m.isCastling = false;
@@ -107,7 +107,7 @@ private:
                 // ensure the en-passant target exists and the captured pawn is on the correct square
                 // board.enPassantTarget() should have been set to the square behind the moved pawn
                 Move m{from, cap};
-                m.Promotion = Promotion::None;
+                m.promotion = Promotion::None;
                 m.isCapture = true;
                 m.isEnpassant = true;
                 m.isCastling = false;
@@ -132,7 +132,7 @@ private:
             m.isCapture = target ? true : false;
             m.isEnpassant = false;
             m.isCastling = false;
-            m.Promotion = Promotion::None;
+            m.promotion = Promotion::None;
 
             out.push_back(m);
         }
@@ -143,7 +143,7 @@ private:
 
         auto helper = [&](const Position& cap) -> bool {
             const Piece* target = board.getPiece(cap);
-            
+
             if (target) {
                 if (target->color() != me->color()) {
                     Move m;
@@ -152,7 +152,7 @@ private:
                     m.isCapture = true;
                     m.isEnpassant = false;
                     m.isCastling = false;
-                    m.Promotion = Promotion::None;
+                    m.promotion = Promotion::None;
                     out.push_back(m);
                 }
                 return false;
@@ -164,7 +164,7 @@ private:
             m.isCapture = false;
             m.isEnpassant = false;
             m.isCastling = false;
-            m.Promotion = Promotion::None;
+            m.promotion = Promotion::None;
             out.push_back(m);
             return true;
         };
@@ -191,7 +191,7 @@ private:
 
         auto helper = [&](const Position& cap) -> bool {
             const Piece* target = board.getPiece(cap);
-            
+
             if (target) {
                 if (target->color() != me->color()) {
                     Move m;
@@ -200,7 +200,7 @@ private:
                     m.isCapture = true;
                     m.isEnpassant = false;
                     m.isCastling = false;
-                    m.Promotion = Promotion::None;
+                    m.promotion = Promotion::None;
                     out.push_back(m);
                 }
                 return false;
@@ -212,7 +212,7 @@ private:
             m.isCapture = false;
             m.isEnpassant = false;
             m.isCastling = false;
-            m.Promotion = Promotion::None;
+            m.promotion = Promotion::None;
             out.push_back(m);
             return true;
         };
@@ -242,7 +242,7 @@ private:
         add_rookMoves(board, from, out);
         add_bishopMoves(board, from, out);
     }
-    
+
     static void add_kingMoves(const Board& board, const Position& from, std::vector<Move>& out) {
         const Piece* me = board.getPiece(from);
         for (int dr = -1; dr <= 1; dr++) {
@@ -258,7 +258,7 @@ private:
                 m.isCapture = target ? true : false;
                 m.isCastling = false;
                 m.isEnpassant = false;
-                m.Promotion = Promotion::None;
+                m.promotion = Promotion::None;
                 out.push_back(m);
             }
         }
@@ -285,7 +285,7 @@ private:
                     m.isCapture = false;
                     m.isCastling = true;
                     m.isEnpassant = false;
-                    m.Promotion = Promotion::None;
+                    m.promotion = Promotion::None;
                     out.push_back(m);
                 }
             }
@@ -303,7 +303,7 @@ private:
                     m.isCapture = false;
                     m.isCastling = true;
                     m.isEnpassant = false;
-                    m.Promotion = Promotion::None;
+                    m.promotion = Promotion::None;
                     out.push_back(m);
                 }
             }

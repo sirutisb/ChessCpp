@@ -1,5 +1,5 @@
 #include <iostream>
-#include "Board.h"
+#include "board.h"
 
 #include <SFML/Graphics.hpp>
 #include <unordered_map>

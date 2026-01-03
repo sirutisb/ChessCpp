@@ -11,7 +11,7 @@
 struct Move {
     Position from;
     Position to;
-    Promotion Promotion = Promotion::None;
+    Promotion promotion = Promotion::None;
     bool isCapture : 1;
     bool isEnpassant : 1;
     bool isCastling : 1;
@@ -172,7 +172,7 @@ public:
 
         // promotion logic
 
-        if (move.Promotion != Promotion::None) {
+        if (move.promotion != Promotion::None) {
             auto& old = board_[move.to.row][move.to.col];
             if (old) {
                 Piece promoted(PieceType::Queen, old.value().color());
